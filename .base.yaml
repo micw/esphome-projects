@@ -1,0 +1,40 @@
+  
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  domain: !secret dns_domain
+  reboot_timeout: "0s"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    password: !secret fallback_ap_password
+    ssid: ${fallback_ap_ssid}
+
+captive_portal:
+
+mqtt:
+  broker: !secret mqtt_host
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+  reboot_timeout: "0s"
+  topic_prefix: ${mqtt_topic_prefix}
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/Berlin
+
+# Enable logging
+logger:
+  baud_rate: 0 # do not log on serial, it can cause a boot loop with uart
+#  level: DEBUG
+
+
+## Enable Home Assistant API
+#api:
+
+ota:
+
+web_server:
+  port: 80
