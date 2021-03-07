@@ -1,0 +1,205 @@
+# Steuerung der Badbeleuchtung (12V LED-Stripes)
+# 
+# Hardware:
+# - NodeMCU Devboard
+# - 12V Spannungsquelle. Diese muss mit GND am NodeMCU-GND hängen, sonst sterben die MOSFET in Sekunden!
+#   12+ an Pluspol der LED-Stripes
+# - IRLZ34N MOSFET Pins (von vorne betrachtet von links nach rechts): G D S
+#   G: direkt an Digital-Out des NodeMCU (kein Wiederstand nötig) sowie mit 10k gegen GND
+#   D: Liefert die geschaltete Masse der Leuchstreifen. Minuspol der Stripes hier anschließen
+#   S: an GND
+#   - an D1: Akzeptbeleuchtung
+#   - an D2: Badschrank links
+#   - an D3: Badschrank rechts
+# - In den beiden Schränken je ein Türschalter (Reed-Kontakt, offen bei geöffneter Tür)
+#   - ein Pol an GND, den anderen an:
+#   - an D6: Schalter Badschrank links
+#   - an D7: Schalter Badschrank rechts
+# - 12->5V Spannungsregler, um den NodeMCU vom LED-Travo mit versorgen zu lassen
+# 
+# Die MOSTFET können einige Ampere schalten (auch per PWM). Da die Eingänge aber nur mit 3,3V getrieben werden,
+# sollte man es nicht übertreiben bzw. ab und zu die Temperatur checken. Kühlblech könnte nicht schaden.
+# (Update: wird nie mehr als handwarm)
+# 
+# Funktionen:
+# - Ziel-Helligkeit wird per MQTT übergeben. Beim Start ist diese 0
+# - Akzeptbeleuchtung hat immer Ziel-Helligkeit
+# - Schränke haben Zielhelligkeit, wenn sie geschlossen sind und 100% wenn sie geöffnet sind
+# - Zwischen Helligkeiten wird sanft gefadet
+#
+# Umsetzung:
+# - light_ambient ist ein normales Light an D1
+# - light_left und light_right sind "interne" Lights an D3/D4, d.h. nicht per MQTT etc. sichtbar
+# - light_base ist ein Light mit einem Template-Output
+#   - gamma steht auf 1, damit die Dimwerte linear übernommen werden
+#   - das Template speichert den state in einer Variablen
+#   - Wenn die jeweilige Tür geschlossen ist, wird das zugehörige Licht direkt in den State von light_base gedimmt
+# - switch_left und switch_right sind Buttons an D6/D7
+#   - beim öffnen/schließen wird der Status des Buttons gespeichert
+#   - beim öffnen wird auf 100% gedimmt
+#   - beim schließen wird auf den gespeicherten State von light_base gedimmt
+#
+# zugehörige ESPHome Konfiguration:
+#  light:
+#  - name: Bad Akzent
+#    platform: mqtt
+#    schema: template
+#    command_topic: "licht/bad/light/light_ambient/command"
+#    state_topic: "licht/bad/light/light_ambient/state"
+#    availability_topic: "licht/bad/status"
+#    command_on_template: '{"state":"ON","brightness":{{ brightness }}}'
+#    command_off_template: '{"state":"OFF"}'
+#    state_template: '{{ value_json.state | lower }}'
+#    brightness_template: '{{ value_json.brightness }}'
+#    payload_available: 'online'
+#    payload_not_available: 'offline'
+#  - name: Bad Schrank
+#    platform: mqtt
+#    schema: template
+#    command_topic: "licht/bad/light/light_base/command"
+#    state_topic: "licht/bad/light/light_base/state"
+#    availability_topic: "licht/bad/status"
+#    command_on_template: '{"state":"ON","brightness":{{ brightness }}}'
+#    command_off_template: '{"state":"OFF"}'
+#    state_template: '{{ value_json.state | lower }}'
+#    brightness_template: '{{ value_json.brightness }}'
+#    payload_available: 'online'
+#    payload_not_available: 'offline'
+
+
+substitutions:
+  fallback_ap_ssid: "Badlicht"
+  mqtt_topic_prefix: licht/bad
+
+<<: !include .base.yaml
+
+
+esphome:
+  name: badlicht
+  platform: ESP8266
+  board: d1_mini
+  esp8266_restore_from_flash: False
+
+globals:
+  - id: base_state
+    type: float
+    restore_value: no
+    initial_value: '0'
+  - id: switch_left_state
+    type: bool
+    restore_value: no
+    initial_value: '0'
+  - id: switch_right_state
+    type: bool
+    restore_value: no
+    initial_value: '0'
+
+binary_sensor:
+  - platform: gpio
+    id: switch_left
+    name: switch_left
+    pin:
+      number: D6
+      mode: INPUT_PULLUP
+    filters:
+      - delayed_on: 100ms
+      - delayed_off: 100ms
+    on_press:
+      - lambda: !lambda id(switch_left_state)=1;
+      - light.control:
+          id: light_left
+          state: on
+          brightness: 1
+          transition_length: '0.5s'
+    on_release:
+      - lambda: !lambda id(switch_left_state)=0;
+      - light.control:
+          id: light_left
+          state: !lambda return id(base_state)>0;
+          brightness: !lambda return id(base_state);
+
+  - platform: gpio
+    id: switch_right
+    name: switch_right
+    pin:
+      number: D7
+      mode: INPUT_PULLUP
+    filters:
+      - delayed_on: 100ms
+      - delayed_off: 100ms
+    on_press:
+      - lambda: !lambda id(switch_right_state)=1;
+      - light.turn_on: light_right
+      - light.control:
+          id: light_right
+          state: on
+          brightness: 1
+          transition_length: '0.5s'
+    on_release:
+      - lambda: !lambda id(switch_right_state)=0;
+      - light.control:
+          id: light_right
+          state: !lambda return id(base_state)>0;
+          brightness: !lambda return id(base_state);
+
+light:
+  - platform: monochromatic
+    id: light_ambient
+    name: light_ambient
+    output: output_light_ambient
+    restore_mode: ALWAYS_OFF
+    default_transition_length: "3s"
+  - platform: monochromatic
+    id: light_base
+    name: light_base
+    output: output_light_base
+    restore_mode: ALWAYS_OFF
+    default_transition_length: "0s"
+    gamma_correct: 1.0
+  - platform: monochromatic
+    id: light_left
+    internal: true
+    output: output_light_left
+    restore_mode: ALWAYS_OFF
+    default_transition_length: "3s"
+  - platform: monochromatic
+    id: light_right
+    internal: true
+    output: output_light_right
+    restore_mode: ALWAYS_OFF
+    default_transition_length: "3s"
+
+output:
+  - platform: esp8266_pwm
+    id: output_light_ambient
+    pin: D1
+    frequency: 1000 Hz
+  - platform: esp8266_pwm
+    id: output_light_left
+    pin: D2
+    frequency: 1000 Hz
+  - platform: esp8266_pwm
+    id: output_light_right
+    pin: D3
+    frequency: 1000 Hz
+  - platform: template
+    id: output_light_base
+    type: float
+    write_action:
+      - lambda: !lambda id(base_state)=state;
+      - if:
+          condition:
+            lambda: !lambda return !id(switch_left_state);
+          then:
+            light.control:
+              id: light_left
+              state: !lambda return state>0;
+              brightness: !lambda return state;
+      - if:
+          condition:
+            lambda: !lambda return !id(switch_right_state);
+          then:
+            light.control:
+              id: light_right
+              state: !lambda return state>0;
+              brightness: !lambda return state;
