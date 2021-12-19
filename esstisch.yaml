@@ -1,0 +1,106 @@
+substitutions:
+  fallback_ap_ssid: "Licht Esstisch"
+  mqtt_topic_prefix: licht/esstisch
+
+<<: !include .base.yaml
+
+esphome:
+  name: esstisch
+  platform: ESP8266
+  board: d1_mini
+  esp8266_restore_from_flash: False
+  build_path: build/esstisch/
+
+globals:
+  - id: dim_state
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+remote_receiver:
+  pin: D6
+  tolerance: 30
+  dump: rc_switch
+
+binary_sensor:
+  - platform: remote_receiver
+    name: "29A_ON"
+    internal: true
+    rc_switch_raw:
+      protocol: 1
+      code: "000100000000010101010001"
+    # the remote triggers every few ms while pressed. the filter turns this into a single key press
+    filters:
+      delayed_off: 300ms
+    on_press:
+      then:
+        - light.turn_on:
+            id: light1
+            brightness: !lambda |-
+              if (id(dim_state)==0) return 0.2;
+              if (id(dim_state)==1) return 0.5;
+              return 1;
+        - lambda: |
+            // count up from 0..2
+            id(dim_state)=(id(dim_state)+1) % 3;
+
+  - platform: remote_receiver
+    name: "29A_OFF"
+    internal: true
+    rc_switch_raw:
+      protocol: 1
+      code: "000100000000010101010100"
+    filters:
+      delayed_off: 1s
+    on_press:
+      then:
+        - light.turn_off:
+            id: light1
+        - lambda: |
+            id(dim_state)=0;
+
+  - platform: remote_receiver
+    name: "WALLSWITCH_ON"
+    internal: true
+    rc_switch_raw:
+      protocol: 2
+      code: "10011100000110101111101000000000"
+    on_press:
+      then:
+        - light.turn_on:
+            id: light1
+            brightness: !lambda |-
+              if (id(dim_state)==0) return 0.2;
+              if (id(dim_state)==1) return 0.5;
+              return 1;
+        - lambda: |
+            // count up from 0..2
+            id(dim_state)=(id(dim_state)+1) % 3;
+
+  - platform: remote_receiver
+    name: "WALLSWITCH_OFF"
+    internal: true
+    rc_switch_raw:
+      protocol: 2
+      code: "10010010000110101111101000000000"
+    on_press:
+      then:
+        - light.turn_off:
+            id: light1
+        - lambda: |
+            id(dim_state)=0;
+
+
+
+light:
+  - platform: monochromatic
+    id: light1
+    output: output_light1
+    restore_mode: ALWAYS_OFF
+    name: light1
+
+output:
+  - platform: esp8266_pwm
+    id: output_light1
+    pin: D5
+    frequency: 1000 Hz

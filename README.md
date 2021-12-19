@@ -2,6 +2,10 @@
 
 Ich stelle meine selbstgebauten Arduino-Projekte Stück für Stück auf ESPHome um. Das Ergebnis ist in diesem Respository zu finden.
 
+## Allgemein
+
+Nutzbare Pins beim ESP8266: https://randomnerdtutorials.com/esp8266-pinout-reference-gpios/
+
 ## Badlicht
 
 In unserem Bad ist ein Einbauschrank mit einem offenen Fach und zwei Fächern mit Glastüren. In allen drei Fächern sind LED-Streifen eingelassen. An den beiden Glastüren sind Reedschalter mit Magneten verbaut. Die Beleuchtung wird von einem ESP8266 und HomeAssistant gesteuert.

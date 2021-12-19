@@ -1,0 +1,24 @@
+substitutions:
+  fallback_ap_ssid: "Kind 3 Nachtlicht"
+  mqtt_topic_prefix: licht/kind3_nachtlicht
+
+<<: !include .base.yaml
+
+esphome:
+  name: kind3_nachtlicht
+  platform: ESP8266
+  board: nodemcu
+  esp8266_restore_from_flash: False
+
+light:
+  - platform: monochromatic
+    id: light1
+    output: output_light1
+    restore_mode: ALWAYS_OFF
+    name: light1
+
+output:
+  - platform: esp8266_pwm
+    id: output_light1
+    pin: D2
+    frequency: 1000 Hz

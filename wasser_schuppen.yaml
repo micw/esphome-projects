@@ -1,0 +1,179 @@
+#
+# Steuerung für Bewässerung am Schuppen
+# 
+# Hardware:
+# - Wemos D1 Mini
+# - 12V Spannungsquelle. Diese muss mit GND am Wemos-GND hängen, sonst sterben die MOSFET in Sekunden!
+#   12+ an Pluspol am Ausgang für die Ventile
+# - 4x IRLZ44N MOSFET Pins (von vorne betrachtet von links nach rechts): G D S
+#   G: direkt an Digital-Out (je einen an D1, D5, D6 und D7) des Wemos (kein Wiederstand nötig) sowie mit 10k gegen GND
+#   D: Liefert die geschaltete Masse der Ventile.
+#   S: an GND
+# - 12->5V Spannungsregler, um den Wemos mit versorgen zu lassen
+# optional:
+# - LED mit 5kOhm Vorwiderstand an jedem geschalteten 12V ausgang als Kontroll-Leuchte
+
+substitutions:
+  fallback_ap_ssid: "WasserSchuppen"
+  mqtt_topic_prefix: wasser_schuppen
+
+<<: !include .base.yaml
+
+
+esphome:
+  name: wasser_schuppen
+  platform: ESP8266
+  board: d1_mini
+  esp8266_restore_from_flash: false
+
+interval:
+  - interval: 60s
+    then:
+      - if:
+          condition:
+            light.is_on: w1
+          then:
+            light.dim_relative:
+              id: w1
+              relative_brightness: -1%
+      - if:
+          condition:
+            light.is_on: w2
+          then:
+            light.dim_relative:
+              id: w2
+              relative_brightness: -1%
+      - if:
+          condition:
+            light.is_on: w3
+          then:
+            light.dim_relative:
+              id: w3
+              relative_brightness: -1%
+      - if:
+          condition:
+            light.is_on: w4
+          then:
+            light.dim_relative:
+              id: w4
+              relative_brightness: -1%
+
+light:
+  - platform: monochromatic
+    name: w1
+    id: w1
+    restore_mode: ALWAYS_OFF
+    output: out_w1
+    default_transition_length: 0s
+    on_turn_on:
+      - if:
+          condition:
+            lambda: return id(w1).remote_values.get_brightness()==1;
+          then:
+            light.control:
+              id: w1
+              brightness: 15%
+  - platform: monochromatic
+    name: w2
+    id: w2
+    restore_mode: ALWAYS_OFF
+    output: out_w2
+    default_transition_length: 0s
+    on_turn_on:
+      - if:
+          condition:
+            lambda: return id(w2).remote_values.get_brightness()==1;
+          then:
+            light.control:
+              id: w2
+              brightness: 15%
+  - platform: monochromatic
+    name: w3
+    id: w3
+    restore_mode: ALWAYS_OFF
+    output: out_w3
+    default_transition_length: 0s
+    on_turn_on:
+      - if:
+          condition:
+            lambda: return id(w3).remote_values.get_brightness()==1;
+          then:
+            light.control:
+              id: w3
+              brightness: 15%
+  - platform: monochromatic
+    name: w4
+    id: w4
+    restore_mode: ALWAYS_OFF
+    output: out_w4
+    default_transition_length: 0s
+    on_turn_on:
+      - if:
+          condition:
+            lambda: return id(w4).remote_values.get_brightness()==1;
+          then:
+            light.control:
+              id: w4
+              brightness: 15%
+
+output:
+  - platform: template
+    type: float
+    id: out_w1
+    write_action:
+      - if:
+          condition:
+            lambda: |-
+              return state>0;
+          then:
+            - output.turn_on: switch_w1
+          else:
+            - output.turn_off: switch_w1
+  - platform: template
+    type: float
+    id: out_w2
+    write_action:
+      - if:
+          condition:
+            lambda: |-
+              return state>0;
+          then:
+            - output.turn_on: switch_w2
+          else:
+            - output.turn_off: switch_w2
+  - platform: template
+    type: float
+    id: out_w3
+    write_action:
+      - if:
+          condition:
+            lambda: |-
+              return state>0;
+          then:
+            - output.turn_on: switch_w3
+          else:
+            - output.turn_off: switch_w3
+  - platform: template
+    type: float
+    id: out_w4
+    write_action:
+      - if:
+          condition:
+            lambda: |-
+              return state>0;
+          then:
+            - output.turn_on: switch_w4
+          else:
+            - output.turn_off: switch_w4
+  - platform: gpio
+    id: switch_w1
+    pin: D1
+  - platform: gpio
+    id: switch_w2
+    pin: D7
+  - platform: gpio
+    id: switch_w3
+    pin: D6
+  - platform: gpio
+    id: switch_w4
+    pin: D5
