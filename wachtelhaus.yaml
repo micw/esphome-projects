@@ -1,0 +1,58 @@
+# Lichtsteuerung und Thermometer im Wachtelhaus
+# 
+# Hardware:
+# - NodeMCU Devboard
+# - 12V Spannungsquelle. Diese muss mit GND am NodeMCU-GND hängen, sonst sterben die MOSFET in Sekunden!
+#   12+ an Pluspol der LED-Stripes
+# - IRLZ34N MOSFET Pins (von vorne betrachtet von links nach rechts): G D S
+#   G: direkt an Digital-Out D5 des NodeMCU (kein Wiederstand nötig) sowie mit 10k gegen GND
+#   D: Liefert die geschaltete Masse der Leuchstreifen. Minuspol der Stripes hier anschließen
+#   S: an GND
+# - 12->5V Spannungsregler, um den NodeMCU vom LED-Travo mit versorgen zu lassen
+# - DS18S20 Temperatursensor
+#   GND: an GND
+#   VCC: an 3.3V
+#   DATA: an D6 sowie mit 2kOhm Pull-Up an 3.3V 
+
+substitutions:
+  fallback_ap_ssid: "Wachtelhaus"
+  mqtt_topic_prefix: wachtelhaus
+
+<<: !include .base.yaml
+
+
+esphome:
+  name: wachtelhaus
+  platform: ESP8266
+  board: d1_mini
+  esp8266_restore_from_flash: false
+  on_boot:
+    then:
+    - light.control:
+        id: light_wachtelhaus
+        state: off
+        brightness: 70%
+
+dallas:
+  - pin: D6
+
+sensor:
+  - platform: dallas
+    index: 0
+    resolution: 10
+    id: temp_wachtelhaus
+    name: "Wachtelhaus Temperatur"
+
+light:
+  - platform: monochromatic
+    id: light_wachtelhaus
+    name: light_wachtelhaus
+    output: output_light_wachtelhaus
+    restore_mode: RESTORE_DEFAULT_OFF
+    default_transition_length: "10s"
+
+output:
+  - platform: esp8266_pwm
+    id: output_light_wachtelhaus
+    pin: D5
+    frequency: 1000 Hz

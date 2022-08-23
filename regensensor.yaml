@@ -1,0 +1,84 @@
+# Regensensor Ventus W174
+# - Auftrennen der Leiterbahn zum Reed-Kontakt auf dem Board, so dass der Reed-Kontakt keinen Kontakt mehr zur Schaltung hat
+# - ein 2-poliges Kabel am Reed-Kontakt angelötet und Kabel durch kleines Loch unten nach außen geführt
+# - Am Kabel liegt jetzt der Puls vom Reed-Kontakt an
+# - Das Original-Board hat keine Funktion mehr und dient nur noch als Träger des Reed-Kontaktes
+# - Ein Wemos D1 mini passt auch direkt ins Batteriefach. Allerdings müsste der Sensor dann jedes mal für Wartungen geöffnet werden.
+#
+# 1 Impuls sind 0.45mm Regen (laut http://www.elektronik2000.de/forum/thread.php?id=1466&p=4)
+# 
+# Hardware:
+# - Wemos D1 mini
+# - Reed-Sensor an GND und D6
+# - 2-5 kOhm Pull-Up zwischen 3.3V und D6
+
+substitutions:
+  fallback_ap_ssid: "Regen"
+  mqtt_topic_prefix: regen
+
+<<: !include .base.yaml
+
+#logger:
+#  baud_rate: 115200
+#  level: DEBUG
+
+
+esphome:
+  name: regen
+  platform: ESP8266
+  board: d1_mini
+  esp8266_restore_from_flash: false
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/Berlin
+    on_time:
+      - seconds: 1
+        minutes: 0
+        hours: 0
+        then:
+        - lambda: |
+            id(last_rain) = id(rain_total).state;
+            id(rain).set_total_pulses(0);
+
+button:
+  - platform: template
+    name: "Nächster Tag"
+    on_press:
+      - lambda: |
+          id(last_rain) = id(rain_total).state;
+          id(rain).set_total_pulses(0);
+
+globals:
+  - id: last_rain
+    type: float
+    restore_value: no
+    initial_value: '0'
+
+sensor:
+  - platform: pulse_meter
+    id: rain
+    pin: D6
+    unit_of_measurement: 'mm/min'
+    name: 'Regen'
+    timeout: 5min
+    internal_filter: 500ms
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.45
+    total:
+      id: rain_total
+      name: "Regenmenge heute"
+      unit_of_measurement: "mm"
+      filters:
+        - multiply: 0.45
+        - heartbeat: 60s
+      accuracy_decimals: 1
+  - platform: template
+    name: "Regenmenge gestern"
+    id: rain_yesterday
+    lambda: |-
+      return id(last_rain);
+    update_interval: 60s
+    unit_of_measurement: "mm"
