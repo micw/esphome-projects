@@ -10,7 +10,14 @@
 # Hardware:
 # - Wemos D1 mini
 # - Reed-Sensor an GND und D6
+# - 100 nF Keramikkondensator zum Entprellen zwischen GND und D6
 # - 2-5 kOhm Pull-Up zwischen 3.3V und D6
+#
+# Characteristik eines Impulses
+# - Dauer: ca. 50-75 ms
+# - Frequenz: bis zu 4 Hz
+# - Prellen: 75 µs
+
 
 substitutions:
   fallback_ap_ssid: "Regen"
