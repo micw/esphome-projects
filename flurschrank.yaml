@@ -1,23 +1,26 @@
-# Lichtsteuerung Esstisch Ambiente
+# Lichtsteuerung Flurschrank (Ambiente)
 # 
 # Hardware:
-# - 5V Spannungsquelle. Diese muss mit GND am NodeMCU-GND hängen, sonst sterben die MOSFET in Sekunden!
+# - 5V Spannungsquelle. Diese muss mit GND am Wemos D1 Mini hängen, sonst sterben die MOSFET in Sekunden!
 #   5V+ an Pluspol der LED-Stripes
 # - IRLZ34N MOSFET Pins (von vorne betrachtet von links nach rechts): G D S
-#   G: direkt an Digital-Out (D5) des NodeMCU (kein Wiederstand nötig) sowie mit 10k gegen GND
+#   G: direkt an Digital-Out (D3) des NodeMCU (kein Wiederstand nötig)
+#      10k gegen GND - schlechte PIN-Wahl, D3 ist beim boot High. Wenn auf Low gezogen, bootet es laut Doku nicht,
+#      scheint aber zu gehen. Bei Gelegenheit umlöten!
 #   D: Liefert die geschaltete Masse der Leuchstreifen. Minuspol der Stripes hier anschließen
 #   S: an GND
 
 substitutions:
-  fallback_ap_ssid: "Kind 3 Nachtlicht"
-  mqtt_topic_prefix: licht/kind3_nachtlicht
+  fallback_ap_ssid: "flurschrank"
+  mqtt_topic_prefix: licht/flurschrank
+  reboot_timeout: 6h
 
 <<: !include .base.yaml
 
 esphome:
-  name: kind3_nachtlicht
+  name: flurschrank
   platform: ESP8266
-  board: nodemcu
+  board: d1_mini
   esp8266_restore_from_flash: False
 
 light:
@@ -30,5 +33,5 @@ light:
 output:
   - platform: esp8266_pwm
     id: output_light1
-    pin: D2
+    pin: D3
     frequency: 1000 Hz

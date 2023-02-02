@@ -1,11 +1,16 @@
-# einfacher Raumsensor, Kind3
+# Lichtsteuerung Esstisch Ambiente
 # 
 # Hardware:
-# - Wemos D1 Mini
-# - DS18S20 Temperatursensor
-#   GND: an GND
-#   VCC: an 3.3V
-#   DATA: an D5
+# - 12V Spannungsquelle. Diese muss mit GND am NodeMCU-GND hängen, sonst sterben die MOSFET in Sekunden!
+#   12+ an Pluspol der LED-Stripes
+# - IRLZ34N MOSFET Pins (von vorne betrachtet von links nach rechts): G D S
+#   G: direkt an Digital-Out (D5) des NodeMCU (kein Wiederstand nötig) sowie mit 10k gegen GND
+#   D: Liefert die geschaltete Masse der Leuchstreifen. Minuspol der Stripes hier anschließen
+#   S: an GND
+# - 230V Optokoppler-Isolations-Modul auf 3V3 Logik-Level
+#   Taster in der Wand neben dem Tisch schaltet das Ambiente-Licht in 3 Stufen
+#   Wenn Taster 60s nicht gedrückt wurde und das Licht an ist, schaltet er immer aus
+# - 12->5V Spannungsregler, um den NodeMCU vom LED-Travo mit versorgen zu lassen
 
 
 substitutions:
