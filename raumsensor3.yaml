@@ -1,4 +1,4 @@
-# einfacher Raumsensor
+# einfacher Raumsensor, Kind3
 # 
 # Hardware:
 # - Wemos D1 Mini
@@ -10,6 +10,7 @@
 substitutions:
   fallback_ap_ssid: "Raumsensor3"
   mqtt_topic_prefix: raumsensor3
+  reboot_timeout: 15min
 
 <<: !include .base.yaml
 

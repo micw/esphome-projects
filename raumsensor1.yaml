@@ -1,4 +1,4 @@
-# einfacher Raumsensor
+# einfacher Raumsensor, Kind 1
 # 
 # Hardware:
 # - NodeMCU Devboard
@@ -10,6 +10,7 @@
 substitutions:
   fallback_ap_ssid: "Raumsensor1"
   mqtt_topic_prefix: raumsensor1
+  reboot_timeout: 15min
 
 <<: !include .base.yaml
 

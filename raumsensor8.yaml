@@ -1,28 +1,28 @@
-# einfacher Raumsensor, Kind 2
+# einfacher Raumsensor, Wohnzimmer
 # 
 # Hardware:
-# - NodeMCU Devboard
+# - Wemos D1 Mini
 # - DS18S20 Temperatursensor
 #   GND: an GND
 #   VCC: an 3.3V
-#   DATA: an D4
+#   DATA: an D5
 
 substitutions:
-  fallback_ap_ssid: "Raumsensor2"
-  mqtt_topic_prefix: raumsensor2
+  fallback_ap_ssid: "Raumsensor8"
+  mqtt_topic_prefix: raumsensor8
   reboot_timeout: 15min
 
 <<: !include .base.yaml
 
 
 esphome:
-  name: raumsensor2
+  name: raumsensor8
   platform: ESP8266
-  board: nodemcu
+  board: d1_mini
   esp8266_restore_from_flash: false
 
 dallas:
-  - pin: D4
+  - pin: D5
 
 sensor:
   - platform: dallas

@@ -1,0 +1,30 @@
+# einfacher Raumsensor, Schlafzimmer
+# 
+# Hardware:
+# - NodeMCU Devboard
+# - AM3202 Temperatur- und Luftfeuchtesensor
+#   GND: an GND
+#   VCC: an 3.3V
+#   DATA: an D4
+
+substitutions:
+  fallback_ap_ssid: "Raumsensor4"
+  mqtt_topic_prefix: raumsensor4
+  reboot_timeout: 15min
+
+<<: !include .base.yaml
+
+esphome:
+  name: raumsensor4
+  platform: ESP8266
+  board: nodemcu
+  esp8266_restore_from_flash: false
+
+sensor:
+  - platform: dht
+    pin: D4
+    model: AM2302
+    temperature:
+      name: "Temperatur"
+    humidity:
+      name: "Luftfeuchte"
