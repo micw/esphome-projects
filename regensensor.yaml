@@ -22,7 +22,7 @@
 substitutions:
   fallback_ap_ssid: "Regen"
   mqtt_topic_prefix: regen
-  reboot_timeout: 15min
+  reboot_timeout: 24h
 
 <<: !include .base.yaml
 

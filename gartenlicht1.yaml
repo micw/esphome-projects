@@ -1,0 +1,154 @@
+substitutions:
+  fallback_ap_ssid: "Gartenlicht1"
+  mqtt_topic_prefix: licht/gartenlicht1
+  reboot_timeout: 6h
+
+<<: !include .base.yaml 
+
+esphome:
+  name: gartenlicht1
+  platform: ESP8266
+  board: d1_mini
+  esp8266_restore_from_flash: False
+
+globals:
+  # Variable, die bei Bewegung hochgesetzt und per Timer jede Sekunde um 1 runtergezählt wird
+  - id: motion_counter
+    type: int
+    restore_value: no
+    initial_value: '0'
+  # Dauer, die das Licht bei erkannter Bewegung an bleibt (in Sekunden)
+  - id: motion_delay
+    type: int
+    restore_value: no
+    initial_value: '90'
+  # Variable in der die Soll-Helligkeit (ohne erkannte Bewegung) geschrieben wird
+  - id: light_brightness
+    type: int
+    restore_value: no
+    initial_value: '0'
+  # Temporäre variable, um Änderungen der Soll-Helligkeit zum letzten Wert zu erkennen
+  - id: old_brightness
+    type: float
+    restore_value: no
+    initial_value: '-1'
+
+interval:
+  - interval: 1s
+    then:
+      - if:
+          condition:
+            lambda: return id(motion_counter)>0;
+          then:
+            - lambda: id(motion_counter)=id(motion_counter)-1;
+#            - logger.log:
+#                  format: "Motion counter: %u"
+#                  args: [ id(motion_counter) ]
+
+binary_sensor:
+  # Physikalischer Bewegungssensor
+  # Erkannte Bewegung wird per MQTT published. So kann die Bewegungserkennung mehrerer Sensoren kombiniert werden.
+  - platform: gpio
+    pin: D7
+    name: "PIR Sensor"
+    id: motion_sensor
+    device_class: motion
+    on_press:
+      then:
+        - lambda: id(motion_counter)=id(motion_delay);
+        - mqtt.publish:
+            topic: motion/garten
+            payload: "1"
+
+sensor:
+  # MQTT-Bewegungssensor
+  - platform: mqtt_subscribe
+    name: motion_mqtt
+    id: motion_mqtt
+    topic: motion/garten
+    internal: true
+    on_value:
+      - if:
+          condition:
+            lambda: return x==1;
+          then:
+            lambda: id(motion_counter)=id(motion_delay);
+  
+  # Sensor für die gesamte Lichtkontrolle
+  - platform: template
+    name: "Licht Ist-Zustand"
+    id: light_control
+    update_interval: 100ms
+    internal: true
+    # Wenn das Licht an ist und Bewegung erkannt wurde, auf "hell" dimmen (aber nicht unter den eingestellten Wert)
+    # Ansonsten auf den eingestellten Wert dimmen
+    lambda: |-
+      float MOTION_DIM_VALUE=100;
+      if (id(light_brightness)>0 && id(light_brightness)<MOTION_DIM_VALUE && id(motion_counter)>0) return MOTION_DIM_VALUE;
+      return id(light_brightness);
+    filters:
+      # Wert filtern, wenn dieser sich nicht verändert hat
+      - lambda: |-
+          static float old_value=-1;
+          if (x==old_value) return {};
+          old_value = x;
+          return x;
+    on_value:
+#      - logger.log:
+#            format: "Brightness: %f"
+#            args: [ x ]
+      - light.control:
+          id: light1
+          state: !lambda return x>0;
+          brightness: !lambda return x/255.0;
+      - light.control:
+          id: light2
+          state: !lambda return x>0;
+          brightness: !lambda return x/255.0;
+
+
+light:
+  # Virtuelles "light" für die Steuerung per MQTT / Webui
+  - platform: monochromatic
+    name: light_garten1
+    id: light_garten1
+    restore_mode: ALWAYS_OFF
+    output: lights
+    default_transition_length: 0s
+    gamma_correct: 1
+
+  # Physische Leuchten - aufgrund von "internal" nicht von außen direkt steuerbar
+  - platform: monochromatic
+    id: light1
+    name: light1
+    output: output_light1
+    restore_mode: ALWAYS_OFF
+    default_transition_length: "3s"
+    internal: true
+  - platform: monochromatic
+    id: light2
+    name: light2
+    output: output_light2
+    restore_mode: ALWAYS_OFF
+    default_transition_length: "3s"
+    internal: true
+
+output:
+  # Virtueller Output für die virtuelle Lampe. Schreibt die Soll-Helligkeit in die Variable 'light_brightness'
+  - platform: template
+    type: float
+    id: lights
+    write_action:
+      - lambda: id(light_brightness)=(state*255); # float zu helligkeitswert
+#      - logger.log:
+#            format: "Brightness (without motion): %i"
+#            args: [ id(light_brightness) ]
+
+  - platform: esp8266_pwm
+    id: output_light1
+    pin: D5
+    frequency: 250 Hz
+  - platform: esp8266_pwm
+    id: output_light2
+    pin: D6
+    frequency: 250 Hz
