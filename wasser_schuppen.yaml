@@ -26,6 +26,7 @@ esphome:
   board: d1_mini
   esp8266_restore_from_flash: false
 
+# Jede Minute Wert um 1 reduzieren
 interval:
   - interval: 60s
     then:
@@ -58,6 +59,8 @@ interval:
               id: w4
               relative_brightness: -1%
 
+# Virtuelle dimbare Leuchten. Wenn Wert>0 ist das Wasser an.
+# Ausgabe erfolt auf Template-Output
 light:
   - platform: monochromatic
     name: w1
@@ -116,6 +119,7 @@ light:
               id: w4
               brightness: 15%
 
+# Template-Output, welches 0 in "aus" und alles >0 in "an" umwandelt
 output:
   - platform: template
     type: float
@@ -165,6 +169,8 @@ output:
             - output.turn_on: switch_w4
           else:
             - output.turn_off: switch_w4
+
+# Reale digitale Ausgänge zur Wassersteuerung
   - platform: gpio
     id: switch_w1
     pin: D1
