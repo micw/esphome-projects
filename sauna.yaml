@@ -17,6 +17,7 @@
 substitutions:
   fallback_ap_ssid: "Sauna"
   mqtt_topic_prefix: sauna
+  reboot_timeout: 15min
 
 <<: !include .base.yaml 
 
