@@ -67,6 +67,7 @@ globals:
 sensor:
   - platform: pulse_meter
     id: rain
+    retain: false
     pin: D6
     unit_of_measurement: 'mm/min'
     name: 'Regen'
@@ -78,6 +79,7 @@ sensor:
     total:
       id: rain_total
       name: "Regenmenge heute"
+      retain: false
       unit_of_measurement: "mm"
       filters:
         - multiply: 0.45
@@ -86,6 +88,7 @@ sensor:
   - platform: template
     name: "Regenmenge gestern"
     id: rain_yesterday
+    retain: false
     lambda: |-
       return id(last_rain);
     update_interval: 60s
