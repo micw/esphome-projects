@@ -1,0 +1,52 @@
+#
+# Gartenlicht am Weg zur Sauna. Subscribed die Topic der Saunabeleuchtung und geht an, wenn Licht in der Sauna an ist
+#
+
+substitutions:
+  fallback_ap_ssid: "Gartenlicht3"
+  mqtt_topic_prefix: licht/gartenlicht3
+  reboot_timeout: 6h
+
+<<: !include .base.yaml 
+
+esphome:
+  name: gartenlicht3
+  platform: ESP8266
+  board: d1_mini
+  esp8266_restore_from_flash: False
+
+text_sensor:
+  # MQTT Saunalicht
+  - platform: mqtt_subscribe
+    name: sauna
+    id: sauna
+    topic: sauna/sensor/saunalicht_status/state
+    internal: true
+    on_value:
+      - if:
+          condition:
+            text_sensor.state:
+              id: sauna
+              state: 'Off'
+          then:
+            light.turn_off:
+              id: light1
+          else:
+            light.turn_on:
+              id: light1
+              brightness: 100%
+
+
+light:
+  - platform: monochromatic
+    id: light1
+    name: light1
+    output: output_light1
+    restore_mode: ALWAYS_OFF
+    default_transition_length: "3s"
+
+output:
+  - platform: esp8266_pwm
+    id: output_light1
+    pin: D5
+    frequency: 250 Hz
