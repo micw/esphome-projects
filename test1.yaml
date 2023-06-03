@@ -1,0 +1,16 @@
+substitutions:
+  fallback_ap_ssid: "Test1"
+  mqtt_topic_prefix: test/test1
+
+<<: !include .base.yaml
+
+esphome:
+  name: test1
+  platform: ESP8266
+  board: d1_mini
+  esp8266_restore_from_flash: False
+
+remote_receiver:
+  pin: D6
+  tolerance: 30
+  dump: rc_switch

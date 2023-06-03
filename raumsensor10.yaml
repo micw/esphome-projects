@@ -1,0 +1,31 @@
+# einfacher Raumsensor
+# 
+# Hardware:
+# - Wemos D1 Mini
+# - DS18S20 Temperatursensor
+#   GND: an GND
+#   VCC: an 3.3V
+#   DATA: an D5
+
+substitutions:
+  fallback_ap_ssid: "Raumsensor10"
+  mqtt_topic_prefix: raumsensor10
+
+<<: !include .base.yaml
+
+
+esphome:
+  name: raumsensor10
+  platform: ESP8266
+  board: d1_mini
+  esp8266_restore_from_flash: false
+
+dallas:
+  - pin: D5
+
+sensor:
+  - platform: dallas
+    index: 0
+    resolution: 10
+    id: temp
+    name: "Temperatur"

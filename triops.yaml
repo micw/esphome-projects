@@ -1,0 +1,58 @@
+# Lichtsteuerung und Thermometer im Wachtelhaus
+# 
+# Hardware:
+# - NodeMCU Devboard
+# - 12V Spannungsquelle. Diese muss mit GND am NodeMCU-GND hängen, sonst sterben die MOSFET in Sekunden!
+#   12+ an Pluspol der LED-Stripes
+# - IRLZ34N MOSFET Pins (von vorne betrachtet von links nach rechts): G D S
+#   G: direkt an Digital-Out D5 des NodeMCU (kein Wiederstand nötig) sowie mit 10k gegen GND
+#   D: Liefert die geschaltete Masse der Leuchstreifen. Minuspol der Stripes hier anschließen
+#   S: an GND
+# - 12->5V Spannungsregler, um den NodeMCU vom LED-Travo mit versorgen zu lassen
+# - DS18S20 Temperatursensor
+#   GND: an GND
+#   VCC: an 3.3V
+#   DATA: an D6 sowie mit 2kOhm Pull-Up an 3.3V 
+
+substitutions:
+  fallback_ap_ssid: "Triops"
+  mqtt_topic_prefix: triops
+
+<<: !include .base.yaml
+
+
+esphome:
+  name: triops
+  platform: ESP8266
+  board: d1_mini
+  esp8266_restore_from_flash: false
+
+switch:
+  - platform: gpio
+    id: heating_triops
+    name: heating_triops
+    pin: D0
+    restore_mode: RESTORE_DEFAULT_OFF
+
+dallas:
+  - pin: D5
+    update_interval: 15s
+
+sensor:
+  - platform: dallas
+    index: 0
+    resolution: 12
+    id: temp_triops
+    name: "Triops Temperatur"
+    on_value:
+      then:
+        - if:
+            condition:
+              lambda: 'return id(temp_triops).state > 25.3;'
+            then:
+              - switch.turn_off: heating_triops
+        - if:
+            condition:
+              lambda: 'return id(temp_triops).state < 24.7;'
+            then:
+              - switch.turn_on: heating_triops

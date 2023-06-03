@@ -1,0 +1,86 @@
+# Gaszähler (Pulszähler)
+# 
+# Hardware:
+# - ESP-WROOM-32, da bei diesem das Flash oft beschrieben werden kann
+# - ein 2-poliges Kabel mit Reed-Kontakt auf GND und GPIO34
+# - 100 nF Keramikkondensator zum Entprellen zwischen GND und GPIO34
+# - 2-5 kOhm Pull-Up zwischen 3.3V und GPIO34
+#
+
+
+substitutions:
+  fallback_ap_ssid: "gasmeter"
+  mqtt_topic_prefix: gasmeter
+  reboot_timeout: 0s
+
+<<: !include .base.yaml
+
+#logger:
+#  baud_rate: 115200
+#  level: DEBUG
+
+esphome:
+  name: gasmeter
+  platform: ESP32
+  board: esp32dev
+
+preferences:
+  flash_write_interval: 0s
+
+globals:
+  - id: gas_total_value
+    type: long
+    restore_value: yes
+    initial_value: '0'
+
+i2c:
+  sda: GPIO13
+  scl: GPIO16
+  scan: true
+  id: i2cbus
+
+sensor:
+  - platform: pulse_meter
+    id: gas_pulse
+    internal: true
+    retain: false
+    pin: GPIO34
+    internal_filter: 500ms
+    filters:
+      - lambda: |-
+          id(gas_total_value)++;
+          id(gas_total).update();
+          return x;
+
+  - platform: mqtt_subscribe
+    name: gas_total_set
+    internal: true
+    id: gas_total_set
+    topic: gasmeter/sensor/gaszaehlerstand/set
+    on_value:
+      then:
+        - globals.set:
+            id: gas_total_value
+            value: !lambda 'return (int) round(x*100);'
+        - component.update: gas_total
+
+  - platform: template
+    id: gas_total
+    name: 'Gaszaehlerstand'
+    retain: false
+    lambda: |-
+      return id(gas_total_value) / 100.0;
+    unit_of_measurement: 'm³'
+    accuracy_decimals: 2
+    update_interval: 60s
+
+  - platform: bmp280
+    temperature:
+      name: "Temperature"
+      retain: false
+      oversampling: 16x
+    pressure:
+      name: "Pressure"
+      retain: false
+    address: 0x76
+    update_interval: 60s

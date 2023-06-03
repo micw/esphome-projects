@@ -1,0 +1,175 @@
+#
+# Retro-Anzeige für beliebige Werte, gebaut aus einem alten Strommesser und einem Servo
+# 
+# Hardware:
+# - Wemos D1 Mini
+# - Servo an +5V, GND und D1
+
+substitutions:
+  fallback_ap_ssid: "RetroMeter1"
+  mqtt_topic_prefix: retrometer1
+
+<<: !include .base.yaml
+
+
+esphome:
+  name: retrometer1
+  platform: ESP8266
+  board: d1_mini
+  esp8266_restore_from_flash: false
+  on_boot:
+    - priority: 401
+      then:
+        servo.write:
+          id: servo1
+          level: 0
+    - priority: 402
+      then:
+        servo.write:
+          id: servo2
+          level: 0
+
+sensor:
+  - platform: mqtt_subscribe
+    name: "Data from topic"
+    id: retrovalue1
+    topic: retrovalue1
+    on_value:
+      then:
+      - servo.write:
+            id: servo1
+            level:  !lambda "return x;"
+  - platform: mqtt_subscribe
+    name: "Data from topic"
+    id: retrovalue2
+    topic: retrovalue2
+    on_value:
+      then:
+      - servo.write:
+            id: servo2
+            level:  !lambda "return x;"
+
+  - platform: mqtt_subscribe
+    name: "Data from topic"
+    id: retrovalue1t
+    topic: output/aussen
+    on_value:
+      then:
+      - servo.write:
+            id: servo1
+            level: !lambda |
+              if (x<-28) return 0.000;
+              if (x<-25) return 0.220;
+              if (x<-22) return 0.250;
+              if (x<=-18.5) return -0.270;
+              if (x<=-15.5) return -0.285;
+              if (x<=-13) return -0.310;
+              if (x<=-10.5) return -0.327;
+              if (x<=-9.5) return -0.350;
+              if (x<=-8.5) return -0.370;
+              if (x<=-7.5) return -0.380;
+              if (x<=-6.5) return -0.395;
+              if (x<=-5.5) return -0.410;
+              if (x<=-4.5) return -0.425;
+              if (x<=-3.5) return -0.440;
+              if (x<=-2.5) return -0.455;
+              if (x<=-1.5) return -0.470;
+              if (x<=-0.5) return -0.485;
+              if (x<=0.5) return -0.502;
+              if (x<=1.5) return -0.517;
+              if (x<=2.5) return -0.532;
+              if (x<=3.5) return -0.547;
+              if (x<=4.5) return -0.563;
+              if (x<=5.5) return -0.576;
+              if (x<=6.5) return -0.592;
+              if (x<=7.5) return -0.603;
+              if (x<=8.5) return -0.622;
+              if (x<=9.5) return -0.638;
+              if (x<=10.5) return -0.651;
+              if (x<=11.5) return -0.663;
+              if (x<=12.5) return -0.678;
+              if (x<=13.5) return -0.692;
+              if (x<=14.5) return -0.707;
+              if (x<=15.5) return -0.723;
+              if (x<=16.5) return -0.738;
+              if (x<=17.5) return -0.755;
+              if (x<=18.5) return -0.768;
+              if (x<=19.5) return -0.782;
+              if (x<=20.5) return -0.793;
+              if (x<=21.5) return -0.805;
+              if (x<=22.5) return -0.820;
+              if (x<=23.5) return -0.834;
+              if (x<=24.5) return -0.849;
+              if (x<=25.5) return -0.862;
+              if (x<=26.5) return -0.876;
+              if (x<=27.5) return -0.890;
+              if (x<=28.5) return -0.900;
+              if (x<=29.5) return -0.916;
+              if (x<=30.5) return -0.930;
+              if (x<=32.5) return -0.943;
+              if (x<=35.5) return -0.956;
+              if (x<=37.5) return -0.970;
+              if (x<=39.5) return -0.985;
+              return -1.000;
+
+  - platform: mqtt_subscribe
+    name: "Data from topic"
+    id: retrovalue2t
+    topic: output/pool
+    on_value:
+      then:
+      - servo.write:
+            id: servo2
+            level: !lambda |
+              if (x<4) return 0.000;
+              if (x<=5.5) return -0.05;
+              if (x<=7.5) return -0.085;
+              if (x<=10.5) return -0.120;
+              if (x<=12.5) return -0.140;
+              if (x<=14.5) return -0.160;
+              if (x<=16.5) return -0.190;
+              if (x<=18.5) return -0.220;
+              if (x<=20.5) return -0.250;
+              if (x<=21.5) return -0.305;
+              if (x<=22.5) return -0.360;
+              if (x<=23.5) return -0.410;
+              if (x<=24.5) return -0.465;
+              if (x<=25.5) return -0.520;
+              if (x<=26.5) return -0.570;
+              if (x<=27.5) return -0.630;
+              if (x<=28.5) return -0.675;
+              if (x<=29.5) return -0.730;
+              if (x<=30.5) return -0.770;
+              if (x<=32.5) return -0.795;
+              if (x<=35.5) return -0.825;
+              if (x<=36.5) return -0.845;
+              if (x<=38.5) return -0.860;
+              if (x<=41.5) return -0.900;
+              return -1.000;
+
+
+servo:
+  - id: servo1
+    output: servo1_out
+    auto_detach_time: 3s
+    transition_length: 1s
+    min_level: 0.032
+    idle_level: 0.15
+    max_level: 0.15
+  - id: servo2
+    output: servo2_out
+    auto_detach_time: 3s
+    transition_length: 1s
+    min_level: 0.045
+    idle_level: 0.12
+    max_level: 0.12
+
+output:
+  - platform: esp8266_pwm
+    id: servo1_out
+    pin: D1
+    frequency: 50 Hz
+  - platform: esp8266_pwm
+    id: servo2_out
+    pin: D2
+    frequency: 50 Hz

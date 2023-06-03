@@ -1,0 +1,62 @@
+# SonOff Basic R1 am Poolroboter. Zusätzlicher Taster zwischen GPIO14 und GND
+
+substitutions:
+  fallback_ap_ssid: "Poolrobot"
+  mqtt_topic_prefix: poolrobot
+  reboot_timeout: 15min
+
+<<: !include .base.yaml 
+
+esphome:
+  name: poolrobot
+  platform: ESP8266
+  board: esp01_1m
+  esp8266_restore_from_flash: False
+
+logger:
+  baud_rate: 115200
+  level: DEBUG
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO0
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    id: button_0
+  - platform: gpio
+    pin:
+      number: GPIO14
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    id: button_1
+    filters:
+      - delayed_on: 100ms
+      - delayed_off: 100ms
+    on_press:
+      then:
+        - light.turn_on: out_1
+
+
+light:
+  - platform: binary
+    name: "PoolRobot"
+    id: out_1
+    output: relay_1
+    restore_mode: ALWAYS_OFF
+    on_turn_on:
+      - delay: 2h
+      - light.turn_off: out_1
+
+
+output:
+  - platform: gpio
+    pin: GPIO12
+    id: relay_1
+  - platform: gpio
+    pin: GPIO13
+    id: led_1

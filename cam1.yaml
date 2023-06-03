@@ -1,0 +1,52 @@
+esphome:
+  name: cam1
+  platform: ESP32
+  board: esp32cam
+
+wifi:
+  ssid: "wiot"
+  password: "voophi8ugei6Oob5ohyohyoh6ohQuiapee7Taic0ieg6IJai9shee2ohth1ziem"
+
+  domain: .wyraz.de
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Cam1 Fallback Hotspot"
+    password: "J6u9g3uthjGv"
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+
+web_server:
+  port: 80
+
+# https://esphome.io/components/esp32_camera.html#configuration-for-m5stack-camera
+esp32_camera:
+  external_clock:
+    pin: GPIO27
+    frequency: 20MHz
+  i2c_pins:
+    sda: GPIO25
+    scl: GPIO23
+  data_pins: [GPIO17, GPIO35, GPIO34, GPIO5, GPIO39, GPIO18, GPIO36, GPIO19]
+  vsync_pin: GPIO22
+  href_pin: GPIO26
+  pixel_clock_pin: GPIO21
+  reset_pin: GPIO15
+  idle_framerate: "0.5 fps"
+
+  name: Cam1
+
+switch:
+  - platform: gpio
+    id: cam1_led
+    # LED is GPIO16: https://github.com/m5stack/esp32-cam-demo/blob/m5cam/main/app_main.c#L48
+    pin: GPIO16
+    restore_mode: ALWAYS_ON

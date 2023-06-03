@@ -1,0 +1,122 @@
+#
+# Steuerung für Bewässerung am Anbau
+# 
+# Hardware:
+# - ESP8266 Dev-Board (No-Name mit 3-Farb-LED)
+# - 5V DC + 24V AC Spannungsquelle
+# - Solid-State-Relais an GPIO 4 und 5
+# - RGB-LED an GPIO 15,13,14
+
+substitutions:
+  fallback_ap_ssid: "WasserAnbau"
+  mqtt_topic_prefix: wasser_anbau
+  reboot_timeout: 2h
+
+<<: !include .base.yaml
+
+esphome:
+  name: wasser_anbau
+  platform: ESP8266
+  board: esp12e
+  esp8266_restore_from_flash: false
+
+# Jede Minute Wert um 1 reduzieren
+interval:
+  - interval: 60s
+    then:
+      - if:
+          condition:
+            light.is_on: w1
+          then:
+            light.dim_relative:
+              id: w1
+              relative_brightness: -1%
+      - if:
+          condition:
+            light.is_on: w2
+          then:
+            light.dim_relative:
+              id: w2
+              relative_brightness: -1%
+
+# Virtuelle dimbare Leuchten. Wenn Wert>0 ist das Wasser an.
+# Ausgabe erfolt auf Template-Output
+light:
+  - platform: monochromatic
+    name: w1
+    id: w1
+    restore_mode: ALWAYS_OFF
+    output: out_w1
+    default_transition_length: 0s
+    on_turn_on:
+      - if:
+          condition:
+            lambda: return id(w1).remote_values.get_brightness()==1;
+          then:
+            light.control:
+              id: w1
+              brightness: 15%
+  - platform: monochromatic
+    name: w2
+    id: w2
+    restore_mode: ALWAYS_OFF
+    output: out_w2
+    default_transition_length: 0s
+    on_turn_on:
+      - if:
+          condition:
+            lambda: return id(w2).remote_values.get_brightness()==1;
+          then:
+            light.control:
+              id: w2
+              brightness: 15%
+
+# Template-Output, welches 0 in "aus" und alles >0 in "an" umwandelt
+output:
+  - platform: template
+    type: float
+    id: out_w1
+    write_action:
+      - if:
+          condition:
+            lambda: |-
+              return state>0;
+          then:
+            - output.turn_on: switch_w1
+            - output.turn_on: led_g
+          else:
+            - output.turn_off: switch_w1
+            - output.turn_off: led_g
+  - platform: template
+    type: float
+    id: out_w2
+    write_action:
+      - if:
+          condition:
+            lambda: |-
+              return state>0;
+          then:
+            - output.turn_on: switch_w2
+            - output.turn_on: led_b
+          else:
+            - output.turn_off: switch_w2
+            - output.turn_off: led_b
+
+# Reale digitale Ausgänge zur Wassersteuerung
+  - platform: gpio
+    id: switch_w1
+    pin: 4
+  - platform: gpio
+    id: switch_w2
+    pin: 5
+
+# RGB LED
+  - platform: gpio
+    id: led_r
+    pin: 15
+  - platform: gpio
+    id: led_g
+    pin: 12
+  - platform: gpio
+    id: led_b
+    pin: 13

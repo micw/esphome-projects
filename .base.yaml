@@ -12,6 +12,7 @@ wifi:
 captive_portal:
 
 mqtt:
+  id: mqttclient
   broker: !secret mqtt_host
   username: !secret mqtt_username
   password: !secret mqtt_password

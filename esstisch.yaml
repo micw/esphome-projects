@@ -39,6 +39,10 @@ binary_sensor:
     name: btn1
     pin: D3
     internal: true
+    on_double_click:
+      then:
+        - light.turn_off:
+            id: light1
     on_press:
       then:
         - light.turn_on:
