@@ -1,0 +1,78 @@
+# Temperatursensoren Schuppen
+# 
+# Hardware:
+# - Wemos D1 Mini
+# - 4x DS18S20 Temperatursensor
+#   GND: an GND
+#   VCC: an 3.3V
+#   DATA: an D1, D2, D4, D6
+
+substitutions:
+  fallback_ap_ssid: "Schuppensensor"
+  mqtt_topic_prefix: schuppensensor
+  reboot_timeout: 15min
+
+<<: !include .base.yaml
+
+
+esphome:
+  name: schuppensensor
+  platform: ESP8266
+  board: d1_mini
+  esp8266_restore_from_flash: false
+
+dallas:
+  - id: pin_west
+    pin: D1
+  - id: pin_sued
+    pin: D2
+  - id: pin_ost
+    pin: D4
+  - id: pin_schuppen
+    pin: D6
+
+sensor:
+  - platform: dallas
+    dallas_id: pin_west
+    index: 0
+    resolution: 10
+    id: aussen_west
+    name: "Temp Aussen West"
+    retain: false
+    filters:
+    - lambda: |-
+        if (x <= 84) return x;
+        else return {};    
+  - platform: dallas
+    dallas_id: pin_sued
+    index: 0
+    resolution: 10
+    id: aussen_sued
+    name: "Temp Aussen Sued"
+    retain: false
+    filters:
+    - lambda: |-
+        if (x <= 84) return x;
+        else return {};    
+  - platform: dallas
+    dallas_id: pin_ost
+    index: 0
+    resolution: 10
+    id: aussen_ost
+    name: "Temp Aussen Ost"
+    retain: false
+    filters:
+    - lambda: |-
+        if (x <= 84) return x;
+        else return {};    
+  - platform: dallas
+    dallas_id: pin_schuppen
+    index: 0
+    resolution: 10
+    id: schuppen
+    name: "Temp Schuppen"
+    retain: false
+    filters:
+    - lambda: |-
+        if (x <= 84) return x;
+        else return {};    
