@@ -26,7 +26,7 @@ time:
 
 # Enable logging
 logger:
-  baud_rate: 0 # do not log on serial, it can cause a boot loop with uart
+  baud_rate: 115200
 #  level: DEBUG
 
 
