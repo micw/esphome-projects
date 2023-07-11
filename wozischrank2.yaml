@@ -1,0 +1,38 @@
+# Lichtsteuerung Wohnzimmerschrenk (Ambiente)
+# 
+# Hardware:
+# - 12V Spannungsquelle. Diese muss mit GND am Wemos D1 Mini hängen, sonst sterben die MOSFET in Sekunden!
+#   12V+ an Pluspol der LED-Stripes
+# - Step-Down 12V -> 5V
+# - IRLZ34N MOSFET Pins (von vorne betrachtet von links nach rechts): G D S
+#   G: direkt an Digital-Out (D6) des NodeMCU (kein Wiederstand nötig)
+#      10k gegen GND - schlechte PIN-Wahl, D3 ist beim boot High. Wenn auf Low gezogen, bootet es laut Doku nicht,
+#      scheint aber zu gehen. Bei Gelegenheit umlöten!
+#   D: Liefert die geschaltete Masse der Leuchstreifen. Minuspol der Stripes hier anschließen
+#   S: an GND
+
+substitutions:
+  fallback_ap_ssid: "wozischrank2"
+  mqtt_topic_prefix: licht/wozischrank2
+  reboot_timeout: 6h
+
+<<: !include .base.yaml
+
+esphome:
+  name: wozischrank2
+  platform: ESP8266
+  board: d1_mini
+  esp8266_restore_from_flash: False
+
+light:
+  - platform: monochromatic
+    id: light1
+    output: output_light1
+    restore_mode: ALWAYS_OFF
+    name: light1
+
+output:
+  - platform: esp8266_pwm
+    id: output_light1
+    pin: D6
+    frequency: 1000 Hz

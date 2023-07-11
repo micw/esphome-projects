@@ -1,0 +1,197 @@
+# D1 Mini ESP32
+#
+# 4 Kanal-Dimmer
+# * Zero-cross detection an 22
+# * Output an 21, 19, 5
+#
+# Taster an 17 mit Pull-Up
+#
+# 433 MhZ Empfänger an 16
+# 
+# LED mit MOSFET an
+# * 18, 23
+
+
+substitutions:
+  fallback_ap_ssid: "wozilampe"
+  mqtt_topic_prefix: licht/wozilampe
+  reboot_timeout: 6h
+
+<<: !include .base.yaml
+
+logger:
+  baud_rate: 115200
+  level: DEBUG
+
+
+esphome:
+  name: wozilampe
+  platform: ESP32
+  board: wemos_d1_mini32
+
+remote_receiver:
+  pin: 16
+  dump: rc_switch
+  tolerance: 60%
+#  filter: 4us
+#  idle: 4ms
+
+binary_sensor:
+  - platform: remote_receiver
+    internal: true
+    id: RC_A_ON
+    rc_switch_raw:
+      code: '010001010000010101010001'
+    filters:
+      delayed_off: 0.1s
+    on_click:
+      then:
+          light.turn_on:
+            id: light1
+            brightness: !lambda |-
+              if (id(light1).current_values.get_brightness()<0.3 || !id(light1).current_values.is_on()) return 1;
+              if (id(light1).current_values.get_brightness()>0.5) return 0.4;
+              return 0.2;
+            
+  - platform: remote_receiver
+    internal: true
+    id: RC_A_OFF
+    rc_switch_raw:
+      code: '010001010000010101010100'
+    filters:
+      delayed_off: 0.1s
+    on_click:
+      then:
+        light.turn_off:
+          id: light1
+
+  - platform: remote_receiver
+    internal: true
+    id: RC_B_ON
+    rc_switch_raw:
+      code: '010001010001000101010001'
+    filters:
+      delayed_off: 0.1s
+    on_click:
+      then:
+          light.turn_on:
+            id: light2
+            brightness: !lambda |-
+              if (id(light2).current_values.get_brightness()<0.3 || !id(light2).current_values.is_on()) return 1;
+              if (id(light2).current_values.get_brightness()>0.5) return 0.4;
+              return 0.2;
+            
+  - platform: remote_receiver
+    internal: true
+    id: RC_B_OFF
+    rc_switch_raw:
+      code: '010001010001000101010100'
+    filters:
+      delayed_off: 0.1s
+    on_click:
+      then:
+        light.turn_off:
+          id: light2
+
+  - platform: remote_receiver
+    internal: true
+    id: RC_C_ON
+    rc_switch_raw:
+      code: '010001010001010001010001'
+    filters:
+      delayed_off: 0.1s
+    on_click:
+      then:
+          light.turn_on:
+            id: light3
+            brightness: !lambda |-
+              if (id(light3).current_values.get_brightness()<0.3 || !id(light3).current_values.is_on()) return 1;
+              if (id(light3).current_values.get_brightness()>0.5) return 0.4;
+              return 0.2;
+            
+  - platform: remote_receiver
+    internal: true
+    id: RC_C_OFF
+    rc_switch_raw:
+      code: '010001010001010001010100'
+    filters:
+      delayed_off: 0.1s
+    on_click:
+      then:
+        light.turn_off:
+          id: light3
+
+
+light:
+  - platform: monochromatic
+    id: light1
+    output: output_light1
+    restore_mode: ALWAYS_OFF
+    name: light1
+    gamma_correct: 0
+    default_transition_length: 0s
+  - platform: monochromatic
+    id: light2
+    output: output_light2
+    restore_mode: ALWAYS_OFF
+    name: light2
+    gamma_correct: 0
+    default_transition_length: 0s
+  - platform: monochromatic
+    id: light3
+    output: output_light3
+    restore_mode: ALWAYS_OFF
+    name: light3
+    gamma_correct: 0
+    default_transition_length: 0s
+  - platform: monochromatic
+    id: light4
+    output: output_light4
+    restore_mode: ALWAYS_OFF
+    name: light4
+  - platform: monochromatic
+    id: light5
+    output: output_light5
+    restore_mode: ALWAYS_OFF
+    name: light5
+
+output:
+  - platform: ac_dimmer
+    id: output_light1
+    gate_pin: 21
+    zero_cross_pin:
+      number: 22
+      mode: INPUT
+      inverted: no
+    min_power: 10%
+    init_with_half_cycle: false
+
+  - platform: ac_dimmer
+    id: output_light2
+    gate_pin: 19
+    zero_cross_pin:
+      number: 22
+      mode: INPUT
+      inverted: no
+    min_power: 10%
+    init_with_half_cycle: false
+
+  - platform: ac_dimmer
+    id: output_light3
+    gate_pin: 5
+    zero_cross_pin:
+      number: 22
+      mode: INPUT
+      inverted: no
+    min_power: 10%
+    init_with_half_cycle: false
+
+  - platform: ledc
+    id: output_light4
+    pin: 18
+    frequency: 1000 Hz
+
+  - platform: ledc
+    id: output_light5
+    pin: 23
+    frequency: 1000 Hz
