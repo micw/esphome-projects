@@ -2,10 +2,11 @@
 # 
 # Hardware:
 # - NodeMCU Devboard
-# - AM3202 Temperatur- und Luftfeuchtesensor
+# - BME280 Temperatur- und Luftfeuchte- und Luftdrucksensor
 #   GND: an GND
 #   VCC: an 3.3V
-#   DATA: an D4
+#   SCA: an D5
+#   SCL: an D6
 
 substitutions:
   fallback_ap_ssid: "Raumsensor4"
@@ -20,11 +21,20 @@ esphome:
   board: nodemcu
   esp8266_restore_from_flash: false
 
+i2c:
+  sda: D5
+  scl: D6
+  scan: true
+
 sensor:
-  - platform: dht
-    pin: D4
-    model: AM2302
+  - platform: bme280
+    address: 0x76
     temperature:
       name: "Temperatur"
+      retain: false
+    pressure:
+      name: "Luftdruck"
+      retain: false
     humidity:
       name: "Luftfeuchte"
+      retain: false

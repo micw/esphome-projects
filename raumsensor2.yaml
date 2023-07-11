@@ -30,3 +30,4 @@ sensor:
     resolution: 10
     id: temp
     name: "Temperatur"
+    retain: false
