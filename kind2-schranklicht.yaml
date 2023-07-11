@@ -1,0 +1,115 @@
+# Lichtsteuerung Schrank Kind 2
+# 
+# Hardware:
+# - 3x REED-Kontakt (Geschlossen wenn Schranktür zu) zwischen GND und je D1, D2, D5
+# - 3x IRLZ34N MOSFET Pins (von vorne betrachtet von links nach rechts): G D S
+#   G: direkt an Digital-Out (D6, D7, D8) des Wemos D1 (kein Wiederstand nötig) sowie mit 10k gegen GND
+#   D: Liefert die geschaltete Masse der Leuchstreifen. Minuspol der Stripes hier anschließen
+#   S: an GND
+
+substitutions:
+  fallback_ap_ssid: "Kind 2 Schranklicht"
+  mqtt_topic_prefix: licht/kind2_schranklicht
+  reboot_timeout: 3h
+
+<<: !include .base.yaml
+
+esphome:
+  name: kind2-schranklicht
+  platform: ESP8266
+  board: d1_mini
+  esp8266_restore_from_flash: False
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: D1
+      mode:
+        input: true
+        pullup: true
+    id: input_1
+    internal: true
+    filters:
+      - delayed_on: 100ms
+      - delayed_off: 100ms
+    on_release:
+      - light.turn_off:
+          id: light1
+          transition_length: 3s
+    on_press:
+      - light.turn_on:
+          id: light1
+          brightness: 80%
+          transition_length: 1s
+  - platform: gpio
+    pin:
+      number: D2
+      mode:
+        input: true
+        pullup: true
+    id: input_2
+    internal: true
+    filters:
+      - delayed_on: 100ms
+      - delayed_off: 100ms
+    on_release:
+      - light.turn_off:
+          id: light2
+          transition_length: 3s
+    on_press:
+      - light.turn_on:
+          id: light2
+          brightness: 80%
+          transition_length: 1s
+  - platform: gpio
+    pin:
+      number: D5
+      mode:
+        input: true
+        pullup: true
+    id: input_3
+    internal: true
+    filters:
+      - delayed_on: 100ms
+      - delayed_off: 100ms
+    on_release:
+      - light.turn_off:
+          id: light3
+          transition_length: 3s
+    on_press:
+      - light.turn_on:
+          id: light3
+          brightness: 80%
+          transition_length: 1s
+
+
+light:
+  - platform: monochromatic
+    id: light1
+    output: output_light1
+    restore_mode: ALWAYS_OFF
+    name: light1
+  - platform: monochromatic
+    id: light2
+    output: output_light2
+    restore_mode: ALWAYS_OFF
+    name: light2
+  - platform: monochromatic
+    id: light3
+    output: output_light3
+    restore_mode: ALWAYS_OFF
+    name: light3
+
+output:
+  - platform: esp8266_pwm
+    id: output_light1
+    pin: D6
+    frequency: 400 Hz
+  - platform: esp8266_pwm
+    id: output_light2
+    pin: D7
+    frequency: 400 Hz
+  - platform: esp8266_pwm
+    id: output_light3
+    pin: D8
+    frequency: 400 Hz
