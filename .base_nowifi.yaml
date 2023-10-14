@@ -1,0 +1,26 @@
+mqtt:
+  id: mqttclient
+  broker: !secret mqtt_host
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+  reboot_timeout: "0s"
+  topic_prefix: ${mqtt_topic_prefix}
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/Berlin
+
+# Enable logging
+logger:
+  baud_rate: 115200
+#  level: DEBUG
+
+
+## Enable Home Assistant API
+#api:
+
+ota:
+
+web_server:
+  port: 80

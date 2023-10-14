@@ -1,0 +1,44 @@
+# einfacher Raumsensor
+# 
+# Hardware:
+# - NodeMCU Devboard
+# - BME680 Raumsensor
+#   GND: an GND
+#   VCC: an 3.3V
+#   SDA: an D3
+#   SCL: an D4
+
+substitutions:
+  fallback_ap_ssid: "esptest1"
+  mqtt_topic_prefix: esptest1
+  reboot_timeout: 15min
+
+<<: !include .base.yaml
+
+
+esphome:
+  name: esptest1
+  platform: ESP8266
+  board: nodemcu
+  esp8266_restore_from_flash: false
+
+i2c:
+  sda: D5
+  scl: D6
+  scan: true
+
+sensor:
+  - platform: bme280
+    address: 0x76
+    temperature:
+      # Temperature in °C
+      name: "Temperature"
+      retain: false
+    pressure:
+      # Pressure in hPa
+      name: "Pressure"
+      retain: false
+    humidity:
+      # Relative humidity %
+      name: "Humidity"
+      retain: false
