@@ -8,6 +8,7 @@ wifi:
   ap:
     password: !secret fallback_ap_password
     ssid: ${fallback_ap_ssid}
+  power_save_mode: none
 
 <<: !include .base_nowifi.yaml
 
