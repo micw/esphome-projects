@@ -1,16 +1,48 @@
 substitutions:
   fallback_ap_ssid: "Test1"
   mqtt_topic_prefix: test/test1
+  reboot_timeout: 6h
 
 <<: !include .base.yaml
 
+
 esphome:
   name: test1
-  platform: ESP8266
-  board: d1_mini
-  esp8266_restore_from_flash: False
+#  platform: ESP8266
+#  board: d1_mini
+#  esp8266_restore_from_flash: False
+  platform: ESP32
+  board: wemos_d1_mini32
 
-remote_receiver:
-  pin: D6
-  tolerance: 30
-  dump: rc_switch
+#remote_receiver:
+#  pin: D6
+#  tolerance: 30
+#  dump: rc_switch
+
+external_components:
+  - source:
+      type: local
+      path: ../wizmote-esphome/components
+#  - source: github://jesserockz/wizmote-esphome
+    components:
+      - esp_now
+      - wizmote
+
+
+esp_now:
+
+wizmote:
+  on_button:
+    - logger.log:
+        format: "bssid %s, button %i, sequence %i"
+        args:
+          - !lambda format_hex(data.bssid, 6).c_str()
+          - data.button
+          - data.sequence
+    - if:
+        condition:
+          lambda: return format_hex(data.bssid, 6).compare("d8a0118091c5") == 0;
+        then:
+        - logger.log:
+            format: "handle bssid %06x, button %i, sequence %i"
+            args: [ data.bssid, data.button, data.sequence ]

@@ -60,6 +60,51 @@ binary_sensor:
             // store time of last button press
             id(last_button_ts)=id(sntp_time).now().timestamp;
 
+remote_receiver:
+  pin: 16
+  dump: rc_switch
+  tolerance: 60%
+#  filter: 4us
+#  idle: 4ms
+
+external_components:
+  - source: github://jesserockz/wizmote-esphome
+    components:
+      - esp_now
+      - wizmote
+
+esp_now:
+
+wizmote:
+  on_button:
+    - if:
+        condition:
+          lambda: return format_hex(data.bssid, 6).compare("d8a0118091c5") == 0;
+        then:
+        - if:
+            condition:
+              # heller
+              lambda: return data.button == 9;
+            then:
+              light.turn_on:
+                id: light1
+                brightness: !lambda |-
+                  if (id(light1).current_values.get_brightness()<0.2 || !id(light1).current_values.is_on()) return 0.2;
+                  if (id(light1).current_values.get_brightness()<0.4) return 0.4;
+                  return 1;
+        - if:
+            condition:
+              # dunkler
+              lambda: return data.button == 8;
+            then:
+              light.turn_on:
+                id: light1
+                brightness: !lambda |-
+                  if (!id(light1).current_values.is_on()) return 0;
+                  if (id(light1).current_values.get_brightness()>0.5) return 0.4;
+                  if (id(light1).current_values.get_brightness()>0.3) return 0.2;
+                  return 0;
+
 light:
   - platform: monochromatic
     id: light1

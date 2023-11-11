@@ -36,6 +36,124 @@ remote_receiver:
 #  filter: 4us
 #  idle: 4ms
 
+external_components:
+  - source: github://jesserockz/wizmote-esphome
+    components:
+      - esp_now
+      - wizmote
+
+esp_now:
+
+wizmote:
+  on_button:
+    - logger.log:
+        format: "bssid %s, button %i, sequence %i"
+        args:
+          - !lambda format_hex(data.bssid, 6).c_str()
+          - data.button
+          - data.sequence
+    - if:
+        condition:
+          lambda: return format_hex(data.bssid, 6).compare("d8a0118091c5") == 0;
+        then:
+        - if:
+            condition:
+              lambda: return data.button == 16;
+            then:
+              light.turn_on:
+                id: light1
+                brightness: !lambda |-
+                  if (id(light1).current_values.get_brightness()<0.2 || !id(light1).current_values.is_on()) return 0.2;
+                  if (id(light1).current_values.get_brightness()<0.4) return 0.4;
+                  if (id(light1).current_values.get_brightness()<1) return 1;
+                  return 0;
+        - if:
+            condition:
+              lambda: return data.button == 17;
+            then:
+              light.turn_on:
+                id: light2
+                brightness: !lambda |-
+                  if (id(light2).current_values.get_brightness()<0.2 || !id(light2).current_values.is_on()) return 0.2;
+                  if (id(light2).current_values.get_brightness()<0.4) return 0.4;
+                  if (id(light2).current_values.get_brightness()<1) return 1;
+                  return 0;
+        - if:
+            condition:
+              lambda: return data.button == 18;
+            then:
+              light.turn_on:
+                id: light3
+                brightness: !lambda |-
+                  if (id(light3).current_values.get_brightness()<0.2 || !id(light3).current_values.is_on()) return 0.2;
+                  if (id(light3).current_values.get_brightness()<0.4) return 0.4;
+                  if (id(light3).current_values.get_brightness()<1) return 1;
+                  return 0;
+        - if:
+            condition:
+              lambda: return data.button == 19;
+            then:
+              lambda: !lambda |-
+                float value;
+                if (id(light4).current_values.get_brightness()<0.2 || !id(light4).current_values.is_on()) value=0.2;
+                else if (id(light4).current_values.get_brightness()<0.4) value=0.4;
+                else if (id(light4).current_values.get_brightness()<1) value=1;
+                else value=0;
+
+                {
+                  auto call = id(light4).turn_on();
+                  call.set_brightness(value);
+                  call.perform();
+                }
+                {
+                  auto call = id(light5).turn_on();
+                  call.set_brightness(value);
+                  call.perform();
+                }
+        - if:
+            condition:
+              lambda: return data.button == 1;
+            then:
+            - light.turn_on:
+                id: light1
+                brightness: 1
+            - light.turn_on:
+                id: light2
+                brightness: 1
+            - light.turn_on:
+                id: light3
+                brightness: 1
+        - if:
+            condition:
+              lambda: return data.button == 2;
+            then:
+            - light.turn_off:
+                id: light1
+            - light.turn_off:
+                id: light2
+            - light.turn_off:
+                id: light3
+            - light.turn_off:
+                id: light4
+            - light.turn_off:
+                id: light5
+        - if:
+            condition:
+              lambda: return data.button == 3;
+            then:
+            - light.turn_off:
+                id: light1
+            - light.turn_off:
+                id: light2
+            - light.turn_off:
+                id: light3
+            - light.turn_on:
+                id: light4
+                brightness: 0.3
+            - light.turn_on:
+                id: light5
+                brightness: 0.3
+
 binary_sensor:
   - platform: remote_receiver
     internal: true
