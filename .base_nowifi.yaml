@@ -21,6 +21,12 @@ logger:
 #api:
 
 ota:
+  - platform: esphome
 
 web_server:
   port: 80
+
+
+button:
+  - platform: restart
+    name: "Restart"
