@@ -6,7 +6,7 @@
 # - 12V Spannungsquelle. Diese muss mit GND am Wemos-GND hängen, sonst sterben die MOSFET in Sekunden!
 #   12+ an Pluspol am Ausgang für die Ventile
 # - 4x IRLZ44N MOSFET Pins (von vorne betrachtet von links nach rechts): G D S
-#   G: direkt an Digital-Out (je einen an D1, D5, D6 und D7) des Wemos (kein Wiederstand nötig) sowie mit 10k gegen GND
+#   G: direkt an Digital-Out (je einen an D5, D6, D7 und D8) des Wemos (kein Wiederstand nötig) sowie mit 10k gegen GND
 #   D: Liefert die geschaltete Masse der Ventile.
 #   S: an GND
 # - 12->5V Spannungsregler, um den Wemos mit versorgen zu lassen
@@ -16,6 +16,7 @@
 substitutions:
   fallback_ap_ssid: "WasserSchuppen"
   mqtt_topic_prefix: wasser_schuppen
+  reboot_timeout: 2h
 
 <<: !include .base.yaml
 
@@ -173,13 +174,17 @@ output:
 # Reale digitale Ausgänge zur Wassersteuerung
   - platform: gpio
     id: switch_w1
-    pin: D1
+    pin:
+      number: D5
   - platform: gpio
     id: switch_w2
-    pin: D7
+    pin:
+      number: D6
   - platform: gpio
     id: switch_w3
-    pin: D6
+    pin:
+      number: D7
   - platform: gpio
     id: switch_w4
-    pin: D5
+    pin:
+      number: D8
