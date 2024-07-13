@@ -8,43 +8,40 @@ substitutions:
 
 esphome:
   name: gridmeter
-  platform: ESP8266
-  board: d1_mini
-  esp8266_restore_from_flash: False
+  platform: ESP32
+  board: wemos_d1_mini32
 
 logger:
-  baud_rate: 0 # do not log on serial, it can cause a boot loop with uart
+  baud_rate: 115200
   level: INFO
 
 uart:
   - id: meter_in
     rx_pin:
-      number: D2
+      number: 16
       inverted: false
       mode:
         input: true
         pullup: false
-    tx_pin:
-      number: TX
     baud_rate: 9600
     data_bits: 8
     parity: NONE
     stop_bits: 1
     rx_buffer_size: 512
-    debug:
-#      dummy_receiver: true
-      direction: RX
-      after:
-        timeout: 250ms
-        bytes: 512
-      sequence:
-        - uart.write: !lambda return bytes;
-        - lambda: id(mqttclient).publish("gridmeter/sensor/sml/state", format_hex(bytes));
-#        - lambda: UARTDebug::log_hex(direction, bytes, 0);
+#    debug:
+#      direction: RX
+#      after:
+#        timeout: 150ms
+#        bytes: 1024
+#      sequence:
+#        - uart.write: !lambda return bytes;
+#        - lambda: id(mqttclient).publish("gridmeter/sensor/sml/state", format_hex(bytes));
 
 sml:
   - id: sml0
     uart_id: meter_in
+    on_data:
+        - lambda: id(mqttclient).publish("gridmeter/sensor/sml/state", format_hex(bytes));
 
 sensor:
   - platform: sml
@@ -92,7 +89,7 @@ binary_sensor:
   - platform: template
     id: led_delayed_off
     filters:
-      - delayed_off: 200ms
+      - delayed_off: 100ms
     on_press:
       then:
         - light.turn_on:
@@ -110,7 +107,7 @@ light:
     internal: true
 
 output:
-  - platform: esp8266_pwm
-    pin: D1
+  - platform: ledc
+    pin: 22
     frequency: 1000 Hz
     id: led_output
