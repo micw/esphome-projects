@@ -10,6 +10,7 @@
 substitutions:
   fallback_ap_ssid: "Poolsensor"
   mqtt_topic_prefix: poolsensor
+  reboot_timeout: 15min
 
 <<: !include .base.yaml
 
@@ -20,12 +21,13 @@ esphome:
   board: nodemcu
   esp8266_restore_from_flash: false
 
-dallas:
-  - pin: D4
+
+one_wire:
+  - platform: gpio
+    pin: D4
 
 sensor:
-  - platform: dallas
-    index: 0
+  - platform: dallas_temp
     resolution: 10
     id: temp
     name: "Temperatur"

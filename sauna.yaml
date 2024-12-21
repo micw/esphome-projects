@@ -109,12 +109,12 @@ binary_sensor:
           }
           call.perform();
 
-dallas:
-  - pin: D4
+one_wire:
+  - platform: gpio
+    pin: D4
 
 sensor:
-  - platform: dallas
-    index: 0
+  - platform: dallas_temp
     resolution: 10
     id: temp
     name: "Temperatur"

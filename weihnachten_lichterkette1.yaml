@@ -1,0 +1,44 @@
+# Lichtsteuerung Weihnachts-Licherketten (5V)
+# 
+# Hardware:
+# - D1 Mini
+# - 5V USB Netzteil
+#   5V+ an Pluspol der LED-Stripes
+# - 2x IRLZ44N MOSFET Pins (von vorne betrachtet von links nach rechts): G D S
+#   G: direkt an Digital-Out D5 des NodeMCU (kein Wiederstand nötig) sowie mit 10k gegen GND
+#   D: Liefert die geschaltete Masse der Leuchstreifen. Minuspol der Stripes hier anschließen
+#   S: an GND
+
+substitutions:
+  fallback_ap_ssid: "Weichnachten Lichterkette 1"
+  mqtt_topic_prefix: licht/weihnachten_lichterkette1
+
+<<: !include .base.yaml
+
+esphome:
+  name: weihnachten_lichterkette1
+  platform: ESP8266
+  board: d1_mini
+  esp8266_restore_from_flash: false
+
+light:
+  - platform: monochromatic
+    id: light1
+    output: output_light1
+    restore_mode: ALWAYS_OFF
+    name: light1
+  - platform: monochromatic
+    id: light2
+    output: output_light2
+    restore_mode: ALWAYS_OFF
+    name: light2
+
+output:
+  - platform: esp8266_pwm
+    id: output_light1
+    pin: D1
+    frequency: 1000 Hz
+  - platform: esp8266_pwm
+    id: output_light2
+    pin: D2
+    frequency: 1000 Hz

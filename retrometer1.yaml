@@ -8,6 +8,7 @@
 substitutions:
   fallback_ap_ssid: "RetroMeter1"
   mqtt_topic_prefix: retrometer1
+  reboot_timeout: "15min"
 
 <<: !include .base.yaml
 
@@ -31,26 +32,7 @@ esphome:
 
 sensor:
   - platform: mqtt_subscribe
-    name: "Data from topic"
-    id: retrovalue1
-    topic: retrovalue1
-    on_value:
-      then:
-      - servo.write:
-            id: servo1
-            level:  !lambda "return x;"
-  - platform: mqtt_subscribe
-    name: "Data from topic"
-    id: retrovalue2
-    topic: retrovalue2
-    on_value:
-      then:
-      - servo.write:
-            id: servo2
-            level:  !lambda "return x;"
-
-  - platform: mqtt_subscribe
-    name: "Data from topic"
+    name: "Data from topic output/aussen"
     id: retrovalue1t
     topic: output/aussen
     on_value:
@@ -113,7 +95,7 @@ sensor:
               return -1.000;
 
   - platform: mqtt_subscribe
-    name: "Data from topic"
+    name: "Data from topic output/pool"
     id: retrovalue2t
     topic: output/pool
     on_value:

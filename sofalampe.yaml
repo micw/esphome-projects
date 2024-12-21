@@ -1,0 +1,105 @@
+# https://www.esphome-devices.com/devices/gosund-sp112/
+# https://community.home-assistant.io/t/esphome-and-blitzwolf-shp5/144296/3
+
+# Energiesensor defekt, dient als Schaltsteckdose
+
+substitutions:
+  fallback_ap_ssid: "sofalampe"
+  mqtt_topic_prefix: licht/sofalampe
+  reboot_timeout: 15min
+
+<<: !include .base.yaml
+
+esphome:
+  name: sofalampe
+  platform: ESP8266
+  board: esp8285
+  build_path: build/sofalampe/
+  on_boot:
+    priority: -10
+    # Turn on switch during startup
+    then:
+      - switch.turn_off: switch1
+
+logger:
+  baud_rate: 0 # do not log on serial, it causes a boot loop with uart
+  logs:
+    sensor: INFO
+    adc: INFO
+
+status_led:
+  pin:
+    number: GPIO02
+    inverted: true
+
+external_components:
+  - source: github://jesserockz/wizmote-esphome
+    components:
+      - esp_now
+      - wizmote
+
+esp_now:
+
+wizmote:
+  on_button:
+    - if:
+        condition:
+          lambda: return format_hex(data.bssid, 6).compare("d8a0118091c5") == 0;
+        then:
+        - if:
+            condition:
+              # heller
+              lambda: return data.button == 9;
+            then:
+              switch.turn_on:
+                id: switch1
+        - if:
+            condition:
+              # dunkler
+              lambda: return data.button == 8;
+            then:
+              switch.turn_off:
+                id: switch1
+
+
+output:
+- platform: gpio
+  id: led1
+  pin:
+    number: GPIO00
+    inverted: true
+
+switch:
+- platform: gpio
+  name: "Relay Mains"
+  id: switch1
+  pin: GPIO14
+  on_turn_on:
+    - output.turn_on: led1
+  on_turn_off:
+    - output.turn_off: led1
+- platform: gpio
+  name: "Relay USB"
+  id: switchusb
+  pin:
+    number: GPIO05
+  restore_mode: RESTORE_DEFAULT_ON
+
+binary_sensor:
+- platform: gpio
+  id: button1
+  pin:
+    number: GPIO16
+    inverted: true
+  on_click:
+  # short button press toggles mains
+  - min_length: 10ms
+    max_length: 250ms
+    then:
+    - switch.toggle: switch1
+  # long button press toggles USB
+  - min_length: 1000ms
+    max_length: 5000ms
+    then:
+    - switch.toggle: switchusb
+

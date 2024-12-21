@@ -26,20 +26,20 @@ binary_sensor:
         pullup: true
       inverted: true
     id: button_0
-  - platform: gpio
-    pin:
-      number: GPIO14
-      mode:
-        input: true
-        pullup: true
-      inverted: true
-    id: button_1
-    filters:
-      - delayed_on: 100ms
-      - delayed_off: 100ms
-    on_press:
-      then:
-        - light.turn_on: out_1
+#  - platform: gpio
+#    pin:
+#      number: GPIO14
+#      mode:
+#        input: true
+#        pullup: true
+#      inverted: true
+#    id: button_1
+#    filters:
+#      - delayed_on: 100ms
+#      - delayed_off: 100ms
+#    on_press:
+#      then:
+#        - light.toggle: out_1
 
 
 light:

@@ -53,19 +53,17 @@ sensor:
     unit_of_measurement: W
     accuracy_decimals: 2
     device_class: energy
-    filters:
-      - multiply: 0.01
   - platform: sml
     retain: false
     name: "energyImportTotal"
     id: "energyImportTotal"
     sml_id: sml0
     obis_code: "1-0:1.8.0"
-    unit_of_measurement: Wh
-    accuracy_decimals: 3
+    unit_of_measurement: kWh
+    accuracy_decimals: 1
     device_class: energy
     filters:
-      - multiply: 0.00000001
+      - multiply: 0.0001
     on_value:
       - binary_sensor.template.publish:
           id: led_delayed_off
@@ -79,11 +77,11 @@ sensor:
     id: "energyExportTotal"
     sml_id: sml0
     obis_code: "1-0:2.8.0"
-    unit_of_measurement: Wh
-    accuracy_decimals: 3
+    unit_of_measurement: kWh
+    accuracy_decimals: 1
     device_class: energy
     filters:
-      - multiply: 0.00000001
+      - multiply: 0.0001
 
 binary_sensor:
   - platform: template
